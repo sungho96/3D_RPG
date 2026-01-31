@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InputManager
 {
@@ -12,6 +13,9 @@ public class InputManager
 
     public void OnUpdate()
     {
+        if (EventSystem.current.IsPointerOverGameObject())//UI버튼을 누르면 다른 행동안하도록 리턴 
+            return;
+
         if (Input.anyKey && KeyAction != null)
             KeyAction.Invoke();
         //press & click을 받을 수있는 인터페이스

@@ -18,6 +18,9 @@ public class PlayerController : MonoBehaviour
 		//마우스 클릭 함수 호출
 		Managers.Input.MouseAction -= OnMouseClicked;
 		Managers.Input.MouseAction += OnMouseClicked;
+
+		//Button UI 생성
+		Managers.Resource.Instantiate("UI/UI_Button");
 	}
 
     void Update()
