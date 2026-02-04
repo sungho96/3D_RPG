@@ -7,6 +7,24 @@ using UnityEngine;
 public class Util
 {
     /// <summary>
+    /// Get/Add를 활용해서 컴포넌트 추가 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="go"></param>
+    /// <returns></returns>
+    public static T GetOrAddComponent<T>(GameObject go) where T : UnityEngine.Component
+    {
+        //이미 붙어 있으면 재사용
+        T component =  go.GetComponent<T>();
+
+        //없으면 자동으로 붙여서, 이후 코드가 null 체크 없이 진행 가능하게 함
+        if (component == null)
+            component = go.AddComponent<T>();
+
+        return component;
+    }
+
+    /// <summary>
     /// FindChild<Transform> 결과를 GameObject로 변환해서 반환하는 버전입니다.
     /// </summary>
     /// <param name="go"></param>

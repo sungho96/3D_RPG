@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
 	bool _moveToDest = false;//이동여부 판단
 	Vector3 _destPos;//mouse 목적지
 
+	UI_Inven _inven;
+	UI_HUD _hud;
+
     void Start()
     {	//키보드로 이동 함수 호출(Action)
 		Managers.Input.KeyAction -= OnKeyboard;
@@ -19,13 +22,21 @@ public class PlayerController : MonoBehaviour
 		Managers.Input.MouseAction -= OnMouseClicked;
 		Managers.Input.MouseAction += OnMouseClicked;
 
-		//Button UI 생성
-		Managers.Resource.Instantiate("UI/UI_Button");
-	}
+		//Inven생성
+		_inven = Managers.UI.ShowSceneUI<UI_Inven>();
+        _inven.gameObject.SetActive(false);
+
+		//HUD생성
+        _hud = Managers.UI.ShowSceneUI<UI_HUD>();
+
+
+    }
 
     void Update()
     {
-		if (_moveToDest)
+        OnKeyboard();
+
+        if (_moveToDest)
 		{
 			//목적에서 방향값 가져오기
 			Vector3 dir = _destPos - transform.position;//마우스-플레이어
@@ -70,7 +81,10 @@ public class PlayerController : MonoBehaviour
 			transform.position += Vector3.right * Time.deltaTime * _speed;
 		}
 
-		_moveToDest = false;
+        if (Input.GetKeyDown(KeyCode.I))
+            _inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
+
+        _moveToDest = false;
 	}
 
 	void OnMouseClicked(Define.MouseEvent evt)

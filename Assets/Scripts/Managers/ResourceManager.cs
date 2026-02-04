@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Resources 폴더 기반 로딩 매니저
+// 전제: Resources/Prefabs/ 아래에 프리팹이 있어야 Load 가능
 public class ResourceManager
 {
     public T Load<T>(string path) where T : Object
@@ -10,7 +12,8 @@ public class ResourceManager
     }
 
     /// <summary>
-    /// 호출시 주소에있는 프리맵 생성 생길장소와 이름
+    ///  Prefabs/{path} 프리팹을 인스턴스화.
+    /// (Clone)을 제거해 디버깅/이름 기반 탐색 시 혼동을 줄임.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="parent"></param>
@@ -24,7 +27,13 @@ public class ResourceManager
             return null;
         }
 
-        return Object.Instantiate(prefab, parent);
+        //프리팹 복사품에 Clone 지우기 
+        GameObject go = Object.Instantiate(prefab, parent);
+        int index = go.name.IndexOf("(Clone)");
+        if (index >0) 
+            go.name = go.name.Substring(0, index);
+
+        return go;
     }
 
     /// <summary>
