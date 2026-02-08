@@ -63,6 +63,7 @@ public abstract class UI_Base : MonoBehaviour
     protected TMP_Text GetText(int idx) { return Get<TMP_Text>(idx); }
     protected Button GetButton(int idx) { return Get<Button>(idx); }
     protected Image GetImage(int idx) { return Get<Image>(idx); }
+    protected TMP_InputField GetInput(int idx) { return Get<TMP_InputField>(idx); }
 
     /// <summary>
     /// UI 오브젝트(go)에 클릭/드래그 이벤트를 코드로 연결해주는 공용 함수.
