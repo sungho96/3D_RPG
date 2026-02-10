@@ -12,6 +12,8 @@ public class LoginScene : BaseScene
 
         SceneType = Define.Scene.Login;
 
+        _loginUI = Managers.UI.ShowSceneUI<UI_Login>();
+
     }
     public override void Clear()
     {
