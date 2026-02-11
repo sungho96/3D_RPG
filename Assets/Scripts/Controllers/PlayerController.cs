@@ -74,10 +74,11 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.I))
         {
             if (_inven == null)
-               _inven = FindFirstObjectByType<UI_Inven>(FindObjectsInactive.Include);
+				_inven = FindFirstObjectByType<UI_Inven>(FindObjectsInactive.Include);
 
             if (_inven != null)
-                _inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
+				Managers.Sound.Play("SFX/UI/Click", Define.Sound.Effect);//SFX추가
+				_inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
         }
 
         _moveToDest = false;

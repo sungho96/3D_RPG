@@ -11,6 +11,13 @@ public class Define //프로젝트 공통 규칙(상태/타입)을 한 곳에 �
         Lobby,
         Game,
     }
+    
+    public enum Sound
+    {
+        Bgm,
+        Effect,
+        MaxCount,
+    }
     public enum UIEvent
     {
         Click,

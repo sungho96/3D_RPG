@@ -71,6 +71,7 @@ public class UI_Inven_Item : UI_Base
     // 클릭 시 선택 토글
     void OnClickItem(PointerEventData eventData)
     {
+        Managers.Sound.Play("SFX/UI/Click", Define.Sound.Effect);//SFX추가
         _isSelected = !_isSelected;
         RefreshSelected();
 

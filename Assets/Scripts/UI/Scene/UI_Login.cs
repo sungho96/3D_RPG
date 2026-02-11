@@ -82,6 +82,7 @@ public class UI_Login : UI_Scene
     /// </summary>
     void OnClickLogin()
     {
+        Managers.Sound.Play("SFX/UI/Click", Define.Sound.Effect);//SFX추가
         // 입력값 읽기
         string id = Get<TMP_InputField>((int)Inputs.IdInput).text;
         string pw = Get<TMP_InputField>((int)Inputs.PwInput).text;
@@ -161,6 +162,8 @@ public class UI_Login : UI_Scene
     /// </summary>
     void OnClickConfirmMessage()
     {
+        Managers.Sound.Play("SFX/UI/Click", Define.Sound.Effect);//SFX추가
+
         SetMessagePanel(active: false);
 
         var id = Get<TMP_InputField>((int)Inputs.IdInput);
