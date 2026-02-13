@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
 	Vector3 _destPos;//mouse 목적지
     UI_Inven _inven;
 
-	void Start()
+    void Start()
 	{   //키보드로 이동 함수 호출(Action)
 		Managers.Input.KeyAction -= OnKeyboard;
 		Managers.Input.KeyAction += OnKeyboard;
@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour
 		Managers.Input.MouseAction -= OnMouseClicked;
 		Managers.Input.MouseAction += OnMouseClicked;
 		_inven = FindFirstObjectByType<UI_Inven>(FindObjectsInactive.Include);
-	}
+    }
 
 	void Update()
     {
@@ -71,16 +71,15 @@ public class PlayerController : MonoBehaviour
 			transform.position += Vector3.right * Time.deltaTime * _speed;
 		}
 
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            if (_inven == null)
+		if (Input.GetKeyDown(KeyCode.I))
+		{
+			if (_inven == null)
 				_inven = FindFirstObjectByType<UI_Inven>(FindObjectsInactive.Include);
 
-            if (_inven != null)
+			if (_inven != null)
 				Managers.Sound.Play("SFX/UI/Click", Define.Sound.Effect);//SFX추가
-				_inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
-        }
-
+			_inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
+		}
         _moveToDest = false;
 	}
 
