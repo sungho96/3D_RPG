@@ -34,7 +34,7 @@ public class UI_HUD : UI_Scene
     TMP_Text _currentMpText;
 
     // 스탯 데이터(실제 값은 여기서 가져옴)
-    PlayerStats _stats;
+    PlayerStats1 _stats;
 
     private void Start()
     {
@@ -63,7 +63,7 @@ public class UI_HUD : UI_Scene
         //씬에서 PlayerStats 찾기
         //    (HUD가 스탯을 직접 들고있지 않으니 참조를 찾아와야 함)
         if (_stats == null)
-            _stats = FindFirstObjectByType<PlayerStats>();
+            _stats = FindFirstObjectByType<PlayerStats1>();
 
         //이벤트 기반 갱신:
         //    매 프레임 LateUpdate로 갱신하지 않고, 스탯이 바뀌는 순간에만 RefreshHUD가 호출되게 함

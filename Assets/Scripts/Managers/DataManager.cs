@@ -20,7 +20,7 @@ public interface ILoader<Key, Value>
 public class DataManager
 {
     // 스탯 테이블: level -> Stat
-    public Dictionary<int, Stat> StatDict { get; private set; } = new Dictionary<int, Stat>();
+    public Dictionary<int, Data.Stat> StatDict { get; private set; } = new Dictionary<int, Data.Stat>();
 
     /// <summary>
     /// 데이터 초기 로드(1회)
@@ -28,7 +28,7 @@ public class DataManager
     /// </summary>
     public void Init()
     {
-        StatDict = LoadJson<StatData, int, Stat>("StatData").MakeDict();
+        StatDict = LoadJson<Data.StatData, int, Data.Stat>("StatData").MakeDict();
     }
 
     /// <summary>

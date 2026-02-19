@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float _speed = 10.0f;
+    PlayerStats _stat;
 
     Vector3 _destPos;          // 마우스 클릭 목적지
     UI_Inven _inven;           // 인벤 UI 캐싱
@@ -14,7 +14,12 @@ public class PlayerController : MonoBehaviour
     NavMeshAgent _nma;         // NavMesh 기반 이동 처리(회전은 직접 제어)
     Animator _anim;            // 애니메이터 캐싱(파라미터만 갱신)
 
-    public enum PlayerState { Die, Moving, Idle }
+    public enum PlayerState 
+    {   Die, 
+        Moving, 
+        Idle, 
+        skill, 
+    }
     PlayerState _state = PlayerState.Idle;
 
     /// <summary>
@@ -25,6 +30,9 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     void Start()
     {
+        //스탯추가
+        _stat = gameObject.GetComponent<PlayerStats>();
+
         // 입력 이벤트는 중복 구독 방지 후 연결
         Managers.Input.KeyAction -= OnKeyboard;
         Managers.Input.KeyAction += OnKeyboard;
@@ -97,7 +105,7 @@ public class PlayerController : MonoBehaviour
         else
         {
             // 프레임당 이동 거리(남은 거리 이상 이동하지 않도록 Clamp)
-            float moveDist = Mathf.Clamp(_speed * Time.deltaTime, 0, dir.magnitude);
+            float moveDist = Mathf.Clamp(_stat.MoveSpeed * Time.deltaTime, 0, dir.magnitude);
 
             // NavMeshAgent 기반 이동(충돌/회전은 별도로 처리)
             _nma.Move(dir.normalized * moveDist);
@@ -155,6 +163,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    int _mask = (1 << (int)Define.Layer.Ground)|(1 << (int)Define.Layer.Monster);
     /// <summary>
     /// 마우스 클릭 처리(Managers.Input.MouseAction에서 호출).
     /// - Wall 레이어 클릭 지점을 목적지로 설정 후 Moving 전환
@@ -170,10 +179,19 @@ public class PlayerController : MonoBehaviour
 
         RaycastHit hit;
         // Wall 레이어만 검사하여 이동 가능한 지점만 목적지로 설정
-        if (Physics.Raycast(ray, out hit, 100.0f, LayerMask.GetMask("Wall")))
+        if (Physics.Raycast(ray, out hit, 100.0f, _mask))
         {
             _destPos = hit.point;
             _state = PlayerState.Moving;
+
+            if(hit.collider.gameObject.layer == (int)Define.Layer.Monster)
+            {
+                Debug.Log("aa");
+            }
+            else
+            {
+                Debug.Log("bb");
+            }
         }
     }
 }

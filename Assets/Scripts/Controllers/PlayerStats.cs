@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class PlayerStats : MonoBehaviour
+public class PlayerStats1 : MonoBehaviour
 {
     // 스탯이 바뀌면 UI가 갱신하도록 알림
     public event Action OnChanged;

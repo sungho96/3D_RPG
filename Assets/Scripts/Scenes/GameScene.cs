@@ -17,6 +17,8 @@ public class GameScene : BaseScene
         _inven = Managers.UI.ShowSceneUI<UI_Inven>();
         _inven.gameObject.SetActive(false);
 
+        Dictionary<int, Data.Stat> dict = Managers.Data.StatDict;
+
         //HUD»ý¼º
         _hud = Managers.UI.ShowSceneUI<UI_HUD>();
     }
