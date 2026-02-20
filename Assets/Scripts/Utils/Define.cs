@@ -6,8 +6,8 @@ public class Define //프로젝트 공통 규칙(상태/타입)을 한 곳에 �
 {
     public enum Layer
     {
-        Monster = 8,
-        Ground = 9,
+        Monster = 9,
+        Ground = 8,
         Block = 10,
     }
 
@@ -37,6 +37,8 @@ public class Define //프로젝트 공통 규칙(상태/타입)을 한 곳에 �
     { 
         Press,
         Click,
+        PointerDown,
+        PointerUp,
     }
 
     public enum CameraMode

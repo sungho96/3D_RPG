@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     NavMeshAgent _nma;         // NavMesh 기반 이동 처리(회전은 직접 제어)
     Animator _anim;            // 애니메이터 캐싱(파라미터만 갱신)
 
+
     public enum PlayerState 
     {   Die, 
         Moving, 
@@ -37,8 +38,8 @@ public class PlayerController : MonoBehaviour
         Managers.Input.KeyAction -= OnKeyboard;
         Managers.Input.KeyAction += OnKeyboard;
 
-        Managers.Input.MouseAction -= OnMouseClicked;
-        Managers.Input.MouseAction += OnMouseClicked;
+        Managers.Input.MouseAction -= OnMouseEvent;
+        Managers.Input.MouseAction += OnMouseEvent;
 
         // UI는 비활성 포함으로 찾아 캐싱
         _inven = FindFirstObjectByType<UI_Inven>(FindObjectsInactive.Include);
@@ -60,6 +61,7 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     void Update()
     {
+
         switch (_state)
         {
             case PlayerState.Die:
@@ -163,35 +165,57 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+
     int _mask = (1 << (int)Define.Layer.Ground)|(1 << (int)Define.Layer.Monster);
+
+    GameObject _lockTarget;
     /// <summary>
     /// 마우스 클릭 처리(Managers.Input.MouseAction에서 호출).
     /// - Wall 레이어 클릭 지점을 목적지로 설정 후 Moving 전환
     /// </summary>
-    void OnMouseClicked(Define.MouseEvent evt)
+    void OnMouseEvent(Define.MouseEvent evt)
     {
         // 사망 상태면 클릭 무시
         if (_state == PlayerState.Die)
             return;
-
+        RaycastHit hit;
+       
         // 마우스 화면 좌표를 월드 Ray로 변환
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        bool raycastHit = Physics.Raycast(ray, out hit, 100.0f, _mask);
 
-        RaycastHit hit;
-        // Wall 레이어만 검사하여 이동 가능한 지점만 목적지로 설정
-        if (Physics.Raycast(ray, out hit, 100.0f, _mask))
+        switch (evt)
         {
-            _destPos = hit.point;
-            _state = PlayerState.Moving;
+            case Define.MouseEvent.PointerDown:
+                {
+                    if(raycastHit)
+                    {
+                        _destPos = hit.point;
+                        _state = PlayerState.Moving;
 
-            if(hit.collider.gameObject.layer == (int)Define.Layer.Monster)
-            {
-                Debug.Log("aa");
-            }
-            else
-            {
-                Debug.Log("bb");
-            }
+                        if (hit.collider.gameObject.layer == (int)Define.Layer.Monster)
+                            _lockTarget = hit.collider.gameObject;
+                        else
+                            _lockTarget = null;
+                    }           
+                }
+                break;
+            case Define.MouseEvent.Press:
+                {
+                    if(_lockTarget != null)
+                    {
+                        _destPos = _lockTarget.transform.position;
+                    }
+                    else
+                    {
+                        if (raycastHit)
+                            _destPos = hit.point;
+                    }
+                }
+                break;
+            case Define.MouseEvent.PointerUp:
+                _lockTarget = null;
+                break;
         }
     }
 }

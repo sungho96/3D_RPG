@@ -1,26 +1,62 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerStats : Stat
 {
-    [SerializeField]
-    protected int _exp;
-    [SerializeField]
-    protected int _gold;
+    [SerializeField] string _playerName = "Kata(name)";
 
-    public int Exp { get { return _exp; } set { _exp = value; } }
-    public int gold { get { return _gold; } set { _gold = value; } }
+    [SerializeField] int _mp = 50;
+    [SerializeField] int _maxMp = 50;
 
-    private void Start()
+    [SerializeField] int _exp = 0;
+    [SerializeField] int _needExp = 100;
+
+    [SerializeField] int _gold = 0;
+
+    public string PlayerName
     {
-        _exp = 0;
-        _gold = 0;  
-        _level = 1;
-        _hp = 100;
-        _maxHp = 100;
-        _attack = 10;
-        _defense = 5;
-        _moveSpeed = 5;
+        get => _playerName;
+        set { _playerName = value; NotifyChanged(); }
     }
+
+    public int Mp
+    {
+        get => _mp;
+        set { _mp = Mathf.Clamp(value, 0, _maxMp); NotifyChanged(); }
+    }
+
+    public int MaxMp
+    {
+        get => _maxMp;
+        set
+        {
+            _maxMp = Mathf.Max(1, value);
+            _mp = Mathf.Clamp(_mp, 0, _maxMp);
+            NotifyChanged();
+        }
+    }
+
+    public float Mp01 => (_maxMp <= 0) ? 0f : Mathf.Clamp01((float)_mp / _maxMp);
+
+    public int Exp
+    {
+        get => _exp;
+        set { _exp = Mathf.Max(0, value); NotifyChanged(); }
+    }
+
+    public int NeedExp
+    {
+        get => _needExp;
+        set { _needExp = Mathf.Max(1, value); NotifyChanged(); }
+    }
+
+    public float Exp01 => (_needExp <= 0) ? 0f : Mathf.Clamp01((float)_exp / _needExp);
+
+    public int Gold
+    {
+        get => _gold;
+        set { _gold = Mathf.Max(0, value); NotifyChanged(); }
+    }
+
+    public string CurrentHpText => $"{Hp} / {MaxHp}";
+    public string CurrentMpText => $"{Mp} / {MaxMp}";
 }

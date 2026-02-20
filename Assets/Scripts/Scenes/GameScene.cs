@@ -11,7 +11,6 @@ public class GameScene : BaseScene
     void Start()
     {
         base.Init();
-
         SceneType = Define.Scene.Game;
         //Inven持失
         _inven = Managers.UI.ShowSceneUI<UI_Inven>();
@@ -21,6 +20,8 @@ public class GameScene : BaseScene
 
         //HUD持失
         _hud = Managers.UI.ShowSceneUI<UI_HUD>();
+
+        gameObject.GetOrAddComponent<CursorController>();
     }
 
 
