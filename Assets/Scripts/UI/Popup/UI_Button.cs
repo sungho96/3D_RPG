@@ -30,12 +30,6 @@ public class UI_Button : UI_Popup
 
     int score;
 
-    private void Start()
-    {
-        // 생성 직후 1회 초기화(바인딩/이벤트 연결)
-        Init();
-    }
-
     public override void Init()
     {
         // 팝업 공통 초기화(캔버스 정렬/오더 세팅)

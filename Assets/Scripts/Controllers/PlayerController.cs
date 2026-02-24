@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public class PlayerController : MonoBehaviour
 {
-    PlayerStats _stat;
+    PlayerStats _stat; // 플레이어 스탯(이동속도/공격력/스킬데미지 등)
 
     Vector3 _destPos;          // 마우스 클릭 목적지
     UI_Inven _inven;           // 인벤 UI 캐싱
@@ -16,10 +16,10 @@ public class PlayerController : MonoBehaviour
     Animator _anim;            // 애니메이터 캐싱(파라미터만 갱신)
 
     // 근접 기본공격/스킬 공용 플래그
-    bool _skillStarted = false;   // 기본공격(연속) 시작 여부(첫 진입 1회용)
-    bool _stopSkill = false;      // 마우스 업 이후: “공격을 계속할지/이동으로 전환할지” 판단용
+    bool _skillStarted = false;   // 기본공격 시작 여부(첫 진입 1회용)
+    bool _stopSkill = false;      // PointerUp 이후: “공격 지속 vs 이동 전환” 판단용
     bool _castingskill = false;   // 스킬 시전 중(이동/기본공격 차단)
-    int _currentSkillHash = 0;    // 현재 시전중인 스킬 해시(필요 시 디버그/확장용)
+    int _currentSkillHash = 0;    // 현재 시전중인 스킬 해시(스킬 타격 이벤트에서 사용)
 
     // Animator State Hash(문자열 비교 비용 줄이기)
     readonly int HASH_WAIT_RUN = Animator.StringToHash("WAIT_RUN");
@@ -51,6 +51,7 @@ public class PlayerController : MonoBehaviour
         {
             _state = value;
 
+            // (선택) 상태 진입 시 1회 처리 로직을 넣고 싶을 때 사용
             Animator anim = GetComponent<Animator>();
             switch (_state)
             {
@@ -71,10 +72,11 @@ public class PlayerController : MonoBehaviour
     /// - KeyAction / MouseAction 구독
     /// - 인벤 UI는 비활성 포함으로 1회 탐색
     /// - NavMeshAgent/Animator 캐싱 및 초기 설정
+    /// - 월드 스페이스 HPBar 생성(플레이어 머리 위 UI)
     /// </summary>
     void Start()
     {
-        // 스탯 캐싱(이동 속도 등 사용)
+        // 스탯 캐싱(이동 속도/공격/스킬 데미지 참조)
         _stat = gameObject.GetComponent<PlayerStats>();
 
         // 입력 이벤트는 중복 구독 방지 후 연결
@@ -94,6 +96,9 @@ public class PlayerController : MonoBehaviour
         // Animator 캐싱 및 초기 상태 재생(대기/이동 블렌드용)
         _anim = GetComponent<Animator>();
         _anim.Play("WAIT_RUN");
+
+        // 월드 스페이스 HPBar 생성(타겟/플레이어 머리 위 UI)
+        Managers.UI.MakeWorldSpaceUI<UI_HPBar>(transform);
     }
 
     /// <summary>
@@ -133,15 +138,16 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 이동 상태 처리.
     /// - 스킬 시전 중이면 이동 차단
-    /// - 타겟이 있으면 일정 거리 도달 시 Skill 상태로 전환(근접 공격 진입)
+    /// - 타겟이 있으면 근접 거리 도달 시 Skill 상태로 전환(근접 공격 진입)
     /// - NavMeshAgent.Move로 목적지 이동 + 회전 보간
     /// - 이동 중 wait_run_ratio를 1로 수렴
     /// </summary>
     void UpdateMoving()
     {
+        // 스킬 시전 중에는 이동 로직 중단
         if (_castingskill) return;
 
-        // 타겟 락이 있으면 근접 거리 도달 시 공격 상태로 전환
+        // 락온 타겟이 있을 때: 근접 거리 도달하면 공격 상태로 전환
         if (_lockTarget != null)
         {
             float distance = (_destPos - transform.position).magnitude;
@@ -149,14 +155,16 @@ public class PlayerController : MonoBehaviour
             {
                 _state = PlayerState.Skill;
                 _skillStarted = false; // 공격 첫 진입 플래그 리셋
-                _stopSkill = false;    // 이동 입력 상태 초기화
+                _stopSkill = false;    // 새 공격 루프 시작(중단 신호 해제)
                 return;
             }
         }
 
+        // 목적지 방향(수평 이동만)
         Vector3 dir = _destPos - transform.position;
         dir.y = 0f;
 
+        // 도착 판정
         if (dir.magnitude < 0.1f)
         {
             _state = PlayerState.Idle;
@@ -164,9 +172,13 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
+            // 이동 거리 계산(오버슈트 방지)
             float moveDist = Mathf.Clamp(_stat.MoveSpeed * Time.deltaTime, 0, dir.magnitude);
+
+            // NavMeshAgent 기반 이동(회전은 직접 처리)
             _nma.Move(dir.normalized * moveDist);
 
+            // 디버그: 이동 방향 표시
             Debug.DrawRay(transform.position + Vector3.up * 0.5f, dir.normalized, Color.green);
 
             // 가까운 장애물(블록) 감지 시 이동 중단
@@ -176,9 +188,11 @@ public class PlayerController : MonoBehaviour
                 return;
             }
 
+            // 이동 방향으로 회전 보간
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 20 * Time.deltaTime);
         }
 
+        // 이동 애니 블렌딩(달리기 비중 증가)
         wait_run_ratio = Mathf.Lerp(wait_run_ratio, 1f, 10 * Time.deltaTime);
         _anim.SetFloat("wait_run_ratio", wait_run_ratio);
     }
@@ -195,16 +209,15 @@ public class PlayerController : MonoBehaviour
 
     /// <summary>
     /// 공격/스킬 상태 처리.
-    /// - _castingskill == true면(스킬 시전 중) : 이동/공격 시작 로직은 막고 “타겟 바라보기”만 유지
-    /// - 기본공격(Attack1)은 _skillStarted가 false일 때 1회만 시작(CrossFade)
-    /// - 실제 타격/루프/종료는 애니메이션 이벤트(OnHitEvent/OnSkillEndEvent)에서 결정
+    /// - _castingskill == true : 스킬 시전 중(타겟 바라보기만 유지)
+    /// - _castingskill == false : 기본공격(Attack1) 루프 시작/유지
+    /// - 실제 타격/종료는 애니메이션 이벤트(OnHitEvent / OnSkillHitEvent / OnSkillEndEvent)에서 처리
     /// </summary>
     void UPdateSkill()
     {
-        // 스킬 시전 중이면(스킬 애니 재생 중) 공격 시작 로직은 하지 않음
+        // 스킬 시전 중이면 기본공격 시작 로직은 막고 방향만 보정
         if (_castingskill)
         {
-            // 시전 중에도 타겟 바라보기 유지(원하면)
             if (_lockTarget != null)
             {
                 Vector3 dir = _lockTarget.transform.position - transform.position;
@@ -215,7 +228,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // 기본공격도 타겟이 있으면 바라보기(근접 타격 방향 보정)
+        // 기본공격 중에도 타겟을 바라보게 유지
         if (_lockTarget != null)
         {
             Vector3 dir = _lockTarget.transform.position - transform.position;
@@ -224,7 +237,7 @@ public class PlayerController : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 20 * Time.deltaTime);
         }
 
-        // 기본공격(Attack1) 첫 진입 1회만 시작
+        // 기본공격(Attack1) 첫 진입 1회만 CrossFade
         if (_skillStarted == false)
         {
             _skillStarted = true;
@@ -237,16 +250,31 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 애니메이션 타격 이벤트(Attack1용).
+    /// 기본공격 타격 이벤트(Attack1용).
     /// - 타격 프레임마다 호출되는 구조를 전제로 함
-    /// - 타겟 유무/마우스 업 여부(_stopSkill)에 따라 다음 상태를 결정
+    /// - 타겟 유무/PointerUp(_stopSkill)에 따라 다음 상태를 결정
     /// </summary>
     public void OnHitEvent()
     {
         // 스킬 시전 중에는 기본공격 히트 이벤트 무시
         if (_castingskill) return;
 
-        _skillStarted = false;     // 다음 루프를 위해 리셋(다음 프레임에 다시 Attack1 시작 가능)
+        // (선택) 타겟이 있으면 데미지 적용
+        if (_lockTarget != null)
+        {
+            // 락온 타겟의 스탯 가져오기
+            Stat targetStat = _lockTarget.GetComponent<Stat>();
+
+            // 내 스탯 가져오기(이미 _stat 캐싱되어 있음)
+            PlayerStats myStat = gameObject.GetComponent<PlayerStats>();
+
+            // 방어력을 고려한 데미지 계산(0 미만 방지)
+            int damage = Mathf.Max(0, myStat.Attack - targetStat.Defense);
+            targetStat.Hp -= damage;
+        }
+
+        // 다음 루프를 위해 리셋(다음 프레임에 Attack1 재시작 가능)
+        _skillStarted = false;
         _nma.isStopped = false;
 
         // 타겟이 없으면 Idle로 복귀
@@ -257,7 +285,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // 마우스 업 이후면 공격 루프 끊고 타겟 쪽으로 이동 상태로 전환
+        // 마우스 업 이후면 공격 루프 중단 → 이동 상태로 전환
         if (_stopSkill)
         {
             _destPos = _lockTarget.transform.position;
@@ -265,14 +293,14 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // 계속 공격 유지(상태는 Skill 유지, Attack1을 다시 재생)
+        // 계속 공격 유지(Attack1 재생)
         _state = PlayerState.Skill;
         _anim.CrossFade(HASH_ATTACK1, 0.05f, 0, 0f);
     }
 
     /// <summary>
     /// 스킬 종료 이벤트(스킬 애니 마지막 프레임에서 호출).
-    /// - _castingskill 플래그 해제
+    /// - 시전 플래그/공격 플래그 리셋
     /// - 타겟이 있으면 다시 접근(Moving), 없으면 Idle 복귀
     /// </summary>
     public void OnSkillEndEvent()
@@ -296,6 +324,44 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
+    /// 스킬 타격 이벤트(스킬 애니 타격 프레임에서 호출).
+    /// - 현재 시전중인 스킬(_currentSkillHash)에 따라 데미지를 결정
+    /// - 방어력을 고려해 타겟 HP 감소
+    /// </summary>
+    public void OnSkillHitEvent()
+    {
+        // 스킬 시전 중일 때만 처리
+        if (!_castingskill) return;
+
+        // 타겟이 없으면 타격 처리 불가
+        if (_lockTarget == null) return;
+
+        // 타겟 스탯 컴포넌트 확인
+        Stat targetStat = _lockTarget.GetComponent<Stat>();
+        if (targetStat == null) return;
+
+        // 현재 스킬 데미지 값 계산
+        int skillDamage = GetCurrentSkillDamage();
+
+        // 방어력을 고려한 데미지 적용
+        int damage = Mathf.Max(0, skillDamage - targetStat.Defense);
+        targetStat.Hp -= damage;
+    }
+
+    /// <summary>
+    /// 현재 시전중인 스킬 해시(_currentSkillHash)에 대응하는 스킬 데미지 반환.
+    /// - PlayerStats의 Skill1~Skill4 값을 사용
+    /// </summary>
+    int GetCurrentSkillDamage()
+    {
+        if (_currentSkillHash == HASH_SKILL1) return Mathf.RoundToInt(_stat.Skill1);
+        if (_currentSkillHash == HASH_SKILL2) return Mathf.RoundToInt(_stat.Skill2);
+        if (_currentSkillHash == HASH_SKILL3) return Mathf.RoundToInt(_stat.Skill3);
+        if (_currentSkillHash == HASH_SKILL4) return Mathf.RoundToInt(_stat.Skill4);
+        return 0;
+    }
+
+    /// <summary>
     /// 스킬 시전 시도(키 입력으로 호출).
     /// - Die/시전중이면 무시
     /// - 이동 정지 + 경로 리셋
@@ -306,13 +372,15 @@ public class PlayerController : MonoBehaviour
         if (_state == PlayerState.Die) return;
         if (_castingskill) return;
 
+        // 시전 시작 플래그 + 현재 스킬 해시 저장
         _castingskill = true;
         _currentSkillHash = skillHash;
 
+        // 시전 중 이동 중단
         _nma.isStopped = true;
         _nma.ResetPath();
 
-        // 시전 중에는 기본공격 루프/이동 로직이 섞이지 않도록 플래그 리셋
+        // 기본공격 루프가 섞이지 않도록 리셋
         _stopSkill = true;
         _skillStarted = false;
 
@@ -338,7 +406,7 @@ public class PlayerController : MonoBehaviour
             _inven.gameObject.SetActive(!_inven.gameObject.activeSelf);
         }
 
-        // 스킬 키(시전중이면 TryCastSkill에서 자동 차단)
+        // 스킬 키 입력(시전중이면 TryCastSkill에서 자동 차단)
         if (Input.GetKeyDown(KeyCode.Q)) TryCastSkill(HASH_SKILL1);
         if (Input.GetKeyDown(KeyCode.W)) TryCastSkill(HASH_SKILL2);
         if (Input.GetKeyDown(KeyCode.E)) TryCastSkill(HASH_SKILL3);
@@ -369,14 +437,16 @@ public class PlayerController : MonoBehaviour
         {
             case Define.MouseEvent.PointerDown:
                 {
+                    // 클릭 지점이 있으면 목적지 갱신 + 이동 상태로 전환
                     if (raycastHit)
                     {
                         _destPos = hit.point;
                         _state = PlayerState.Moving;
 
-                        _stopSkill = false; // 새 입력 시작이므로 “중단” 해제
+                        // 새 입력 시작이므로 “중단” 해제
+                        _stopSkill = false;
 
-                        // 몬스터 클릭이면 락온(거리 도달 후 자동 공격 진입)
+                        // 몬스터 클릭이면 락온, 아니면 락온 해제
                         if (hit.collider.gameObject.layer == (int)Define.Layer.Monster)
                             _lockTarget = hit.collider.gameObject;
                         else
@@ -387,7 +457,7 @@ public class PlayerController : MonoBehaviour
 
             case Define.MouseEvent.Press:
                 {
-                    // 누르는 동안 타겟이 있으면 타겟 추적, 없으면 마우스 지점 추적
+                    // 누르는 동안: 타겟 있으면 타겟 추적 / 없으면 마우스 지점 추적
                     if (_lockTarget != null)
                     {
                         _destPos = _lockTarget.transform.position;

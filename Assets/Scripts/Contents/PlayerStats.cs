@@ -12,6 +12,17 @@ public class PlayerStats : Stat
 
     [SerializeField] int _gold = 0;
 
+    [SerializeField] float _skill1 = 40f;
+    [SerializeField] float _skill2 = 30f;
+    [SerializeField] float _skill3 = 20f;
+    [SerializeField] float _skill4 = 10f;
+
+    public float Skill1 => _skill1;
+    public float Skill2 => _skill2;
+    public float Skill3 => _skill3;
+    public float Skill4 => _skill4;
+
+
     public string PlayerName
     {
         get => _playerName;

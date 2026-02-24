@@ -19,6 +19,12 @@ public abstract class UI_Base : MonoBehaviour
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="type"></param>
+
+    private void Start()
+    {
+        Init();
+    }
+
     protected void Bind<T>(Type type) where T : UnityEngine.Object// 전제: enum 이름 == Hierarchy 오브젝트 이름 (대소문자 포함 정확히 일치해야 함)
     {
         //string으로 이름 가져오기

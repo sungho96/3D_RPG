@@ -36,12 +36,6 @@ public class UI_HUD : UI_Scene
     // 스탯 데이터(실제 값은 여기서 가져옴)
     PlayerStats _stats;
 
-    private void Start()
-    {
-        // UI 생성 후 초기 바인딩/구독 세팅
-        Init();
-    }
-
     public override void Init()
     {
         base.Init();

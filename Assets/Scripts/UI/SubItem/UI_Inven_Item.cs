@@ -27,11 +27,6 @@ public class UI_Inven_Item : UI_Base
 
     bool _isSelected = false;
 
-    void Start()
-    {
-        Init();
-    }
-
     public override void Init()
     {
         // 1) 바인딩(자식 오브젝트 캐싱)

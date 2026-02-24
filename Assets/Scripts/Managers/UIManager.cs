@@ -46,6 +46,32 @@ public class UIManager
             canvas.sortingOrder = 0;
         }
     }
+    /// <summary>
+    /// World Space추가 기능 캔버스 =월드 카메라 코드 사전 구현
+    /// </summary>
+    /// <param name="parent">생성 후 붙일 부모(레이아웃 그룹이 붙어있는 컨테이너)</param>
+    /// <param name="name">프리팹 이름(없으면 클래스명 사용)</param>
+    public T MakeWorldSpaceUI<T>(Transform parent = null, string name = null) where T : UI_Base
+    {
+        // name이 없으면 "클래스명 == 프리팹명" 규칙으로 자동 로딩
+        if (string.IsNullOrEmpty(name))
+            name = typeof(T).Name;
+
+        // 전제: Prefabs/UI/WorldSpace/{name}.prefab 형태로 존재해야 함(ResourceManager 규칙)
+        GameObject go = Managers.Resource.Instantiate($"UI/WorldSpace/{name}");
+
+        //부모가 핵심(부모가 Grid/Content면 레이아웃이 자동 적용됨)
+        if (parent != null)
+            go.transform.SetParent(parent);
+
+        //캔버스 world space로 변경/ 메인카메라 추가
+        Canvas canvas = go.GetOrAddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.worldCamera = Camera.main;
+
+
+        return Util.GetOrAddComponent<T>(go);
+    }
 
     /// <summary>
     /// SubItem(UI 조각/슬롯)을 동적으로 생성하는 공용 팩토리.

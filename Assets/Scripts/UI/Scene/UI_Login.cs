@@ -43,8 +43,6 @@ public class UI_Login : UI_Scene
         // UI가 Instantiate된 뒤 Start에서 Init을 1회 호출하여 바인딩/이벤트 연결을 보장
         if (_inited) return;
         _inited = true;
-
-        Init();
     }
 
     public override void Init()

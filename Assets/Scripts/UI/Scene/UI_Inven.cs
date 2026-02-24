@@ -23,14 +23,6 @@ public class UI_Inven : UI_Scene
     RectTransform _canvasRt;           // 캔버스 기준 좌표 변환용 캐싱
     Canvas _canvas;
 
-    // 툴팁 위치 보정(마우스 커서 기준 오프셋)
-    Vector2 _offset = new Vector2(20f, -20f);
-
-    void Start()
-    {
-        Init();
-    }
-
     public override void Init()
     {
         base.Init();
