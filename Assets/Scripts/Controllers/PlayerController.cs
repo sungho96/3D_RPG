@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : BaseController
 {
     PlayerStats _stat; // 플레이어 스탯(이동속도/공격력/스킬데미지 등)
 
-    Vector3 _destPos;          // 마우스 클릭 목적지
     UI_Inven _inven;           // 인벤 UI 캐싱
     float wait_run_ratio = 0f; // 대기(0)↔달리기(1) 블렌드 값
 
@@ -29,43 +28,6 @@ public class PlayerController : MonoBehaviour
     readonly int HASH_SKILL3 = Animator.StringToHash("SKILL 3");
     readonly int HASH_SKILL4 = Animator.StringToHash("Attack3");
 
-    public enum PlayerState
-    {
-        Die,
-        Moving,
-        Idle,
-        Skill, // 기본공격/스킬 상태 공용(애니 이벤트로 루프/종료 제어)
-    }
-
-    [SerializeField]
-    PlayerState _state = PlayerState.Idle;
-
-    /// <summary>
-    /// 상태 프로퍼티(현재는 스위치만 있고 동작은 비어있음).
-    /// - 필요하면 상태 진입 시 1회 처리(애니/이동/플래그 리셋)를 여기에 모을 수 있음
-    /// </summary>
-    public PlayerState State
-    {
-        get { return _state; }
-        set
-        {
-            _state = value;
-
-            // (선택) 상태 진입 시 1회 처리 로직을 넣고 싶을 때 사용
-            Animator anim = GetComponent<Animator>();
-            switch (_state)
-            {
-                case PlayerState.Die:
-                    break;
-                case PlayerState.Idle:
-                    break;
-                case PlayerState.Moving:
-                    break;
-                case PlayerState.Skill:
-                    break;
-            }
-        }
-    }
 
     /// <summary>
     /// 입력 이벤트 연결 + UI/컴포넌트 캐싱.
@@ -74,7 +36,7 @@ public class PlayerController : MonoBehaviour
     /// - NavMeshAgent/Animator 캐싱 및 초기 설정
     /// - 월드 스페이스 HPBar 생성(플레이어 머리 위 UI)
     /// </summary>
-    void Start()
+    public override void Init()
     {
         // 스탯 캐싱(이동 속도/공격/스킬 데미지 참조)
         _stat = gameObject.GetComponent<PlayerStats>();
@@ -98,41 +60,8 @@ public class PlayerController : MonoBehaviour
         _anim.Play("WAIT_RUN");
 
         // 월드 스페이스 HPBar 생성(타겟/플레이어 머리 위 UI)
+         if (gameObject.GetComponentInChildren<UI_HPBar>()== null)
         Managers.UI.MakeWorldSpaceUI<UI_HPBar>(transform);
-    }
-
-    /// <summary>
-    /// 상태(FSM) 분기 업데이트.
-    /// - Die / Moving / Idle / Skill 전용 Update로 분기
-    /// </summary>
-    void Update()
-    {
-        switch (_state)
-        {
-            case PlayerState.Die:
-                UpdateDie();
-                break;
-
-            case PlayerState.Moving:
-                UpdateMoving();
-                break;
-
-            case PlayerState.Idle:
-                UpdateIdle();
-                break;
-
-            case PlayerState.Skill:
-                UPdateSkill();
-                break;
-        }
-    }
-
-    /// <summary>
-    /// 사망 상태 처리(현재 비어있음).
-    /// - 필요 시 입력 차단/연출/리스폰 로직 추가
-    /// </summary>
-    void UpdateDie()
-    {
     }
 
     /// <summary>
@@ -142,7 +71,7 @@ public class PlayerController : MonoBehaviour
     /// - NavMeshAgent.Move로 목적지 이동 + 회전 보간
     /// - 이동 중 wait_run_ratio를 1로 수렴
     /// </summary>
-    void UpdateMoving()
+    protected override void UpdateMoving()
     {
         // 스킬 시전 중에는 이동 로직 중단
         if (_castingskill) return;
@@ -153,7 +82,7 @@ public class PlayerController : MonoBehaviour
             float distance = (_destPos - transform.position).magnitude;
             if (distance <= 1)
             {
-                _state = PlayerState.Skill;
+                _state = Define.State.Skill;
                 _skillStarted = false; // 공격 첫 진입 플래그 리셋
                 _stopSkill = false;    // 새 공격 루프 시작(중단 신호 해제)
                 return;
@@ -167,27 +96,23 @@ public class PlayerController : MonoBehaviour
         // 도착 판정
         if (dir.magnitude < 0.1f)
         {
-            _state = PlayerState.Idle;
+            _state = Define.State.Idle;
             return;
         }
         else
         {
-            // 이동 거리 계산(오버슈트 방지)
-            float moveDist = Mathf.Clamp(_stat.MoveSpeed * Time.deltaTime, 0, dir.magnitude);
-
-            // NavMeshAgent 기반 이동(회전은 직접 처리)
-            _nma.Move(dir.normalized * moveDist);
-
             // 디버그: 이동 방향 표시
             Debug.DrawRay(transform.position + Vector3.up * 0.5f, dir.normalized, Color.green);
 
             // 가까운 장애물(블록) 감지 시 이동 중단
             if (Physics.Raycast(transform.position + Vector3.up * 0.5f, dir, 1.0f, LayerMask.GetMask("Block")))
             {
-                _state = PlayerState.Idle;
+                _state = Define.State.Idle;
                 return;
             }
-
+            // 이동 거리 계산(오버슈트 방지)
+            float moveDist = Mathf.Clamp(_stat.MoveSpeed * Time.deltaTime, 0, dir.magnitude);
+            transform.position += dir.normalized * moveDist;
             // 이동 방향으로 회전 보간
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 20 * Time.deltaTime);
         }
@@ -201,7 +126,7 @@ public class PlayerController : MonoBehaviour
     /// 대기 상태 처리.
     /// - wait_run_ratio를 0으로 수렴(대기 비중 증가)
     /// </summary>
-    void UpdateIdle()
+    protected override void UpdateIdle()
     {
         wait_run_ratio = Mathf.Lerp(wait_run_ratio, 0f, 10 * Time.deltaTime);
         _anim.SetFloat("wait_run_ratio", wait_run_ratio);
@@ -213,7 +138,7 @@ public class PlayerController : MonoBehaviour
     /// - _castingskill == false : 기본공격(Attack1) 루프 시작/유지
     /// - 실제 타격/종료는 애니메이션 이벤트(OnHitEvent / OnSkillHitEvent / OnSkillEndEvent)에서 처리
     /// </summary>
-    void UPdateSkill()
+    protected override void UpdateSkill()
     {
         // 스킬 시전 중이면 기본공격 시작 로직은 막고 방향만 보정
         if (_castingskill)
@@ -280,7 +205,7 @@ public class PlayerController : MonoBehaviour
         // 타겟이 없으면 Idle로 복귀
         if (_lockTarget == null)
         {
-            _state = PlayerState.Idle;
+            _state = Define.State.Idle;
             _anim.CrossFade(HASH_WAIT_RUN, 0.05f, 0, 0f);
             return;
         }
@@ -289,12 +214,12 @@ public class PlayerController : MonoBehaviour
         if (_stopSkill)
         {
             _destPos = _lockTarget.transform.position;
-            _state = PlayerState.Moving;
+            _state = Define.State.Moving;
             return;
         }
 
         // 계속 공격 유지(Attack1 재생)
-        _state = PlayerState.Skill;
+        _state = Define.State.Skill;
         _anim.CrossFade(HASH_ATTACK1, 0.05f, 0, 0f);
     }
 
@@ -314,11 +239,11 @@ public class PlayerController : MonoBehaviour
         if (_lockTarget != null)
         {
             _destPos = _lockTarget.transform.position;
-            _state = PlayerState.Moving;
+            _state = Define.State.Moving;
         }
         else
         {
-            _state = PlayerState.Idle;
+            _state = Define.State.Idle;
             _anim.CrossFade(HASH_WAIT_RUN, 0.05f, 0, 0f);
         }
     }
@@ -369,7 +294,7 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     void TryCastSkill(int skillHash)
     {
-        if (_state == PlayerState.Die) return;
+        if (_state == Define.State.Die) return;
         if (_castingskill) return;
 
         // 시전 시작 플래그 + 현재 스킬 해시 저장
@@ -384,7 +309,7 @@ public class PlayerController : MonoBehaviour
         _stopSkill = true;
         _skillStarted = false;
 
-        _state = PlayerState.Skill;
+        _state = Define.State.Skill;
         _anim.CrossFade(skillHash, 0.05f, 0, 0f);
     }
 
@@ -416,7 +341,7 @@ public class PlayerController : MonoBehaviour
     // Raycast 대상 레이어(바닥 + 몬스터)
     int _mask = (1 << (int)Define.Layer.Ground) | (1 << (int)Define.Layer.Monster);
 
-    GameObject _lockTarget; // 몬스터 클릭 시 락온 타겟(Press 동안 _destPos를 타겟으로 계속 갱신)
+
 
     /// <summary>
     /// 마우스 이벤트 처리(Managers.Input.MouseAction에서 호출).
@@ -426,7 +351,7 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     void OnMouseEvent(Define.MouseEvent evt)
     {
-        if (_state == PlayerState.Die) return;
+        if (_state == Define.State.Die) return;
         if (_castingskill) return;
 
         RaycastHit hit;
@@ -441,7 +366,7 @@ public class PlayerController : MonoBehaviour
                     if (raycastHit)
                     {
                         _destPos = hit.point;
-                        _state = PlayerState.Moving;
+                        _state = Define.State.Moving;
 
                         // 새 입력 시작이므로 “중단” 해제
                         _stopSkill = false;
