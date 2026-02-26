@@ -14,6 +14,8 @@ public abstract class BaseController : MonoBehaviour
     [SerializeField]
     protected Vector3 _destPos;          // 마우스 클릭 목적지
 
+    public Define.WorldObject WorldObjectType { get; protected set; } = Define.WorldObject.Unknown;
+
     private void Start()
     {
         Init();

@@ -38,6 +38,7 @@ public class PlayerController : BaseController
     /// </summary>
     public override void Init()
     {
+        WorldObjectType = Define.WorldObject.Player;
         // 스탯 캐싱(이동 속도/공격/스킬 데미지 참조)
         _stat = gameObject.GetComponent<PlayerStats>();
 

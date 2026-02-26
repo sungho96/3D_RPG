@@ -8,7 +8,7 @@ public class GameScene : BaseScene
     UI_Inven _inven;
     UI_HUD _hud;
 
-    void Start()
+    protected override void Init()
     {
         base.Init();
         SceneType = Define.Scene.Game;
@@ -22,6 +22,11 @@ public class GameScene : BaseScene
         _hud = Managers.UI.ShowSceneUI<UI_HUD>();
 
         gameObject.GetOrAddComponent<CursorController>();
+
+        GameObject player = Managers.Game.Spawn(Define.WorldObject.Player, "UnityChan");
+        Camera.main.gameObject.GetOrAddComponent<CameraController>().SetPlayer(player);
+
+        Managers.Game.Spawn(Define.WorldObject.Monster, "Knight");
     }
 
 

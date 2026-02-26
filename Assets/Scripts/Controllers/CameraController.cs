@@ -13,11 +13,13 @@ public class CameraController : MonoBehaviour
     public Vector3 _delta = new Vector3(0.0f, 6.0f, -5.0f);
 
     [SerializeField] //대상자
-    public GameObject _player;
+    public GameObject _player = null;
 
     // 플레이어의 머리/상체 쪽을 바라보게 하기 위한 시선 높이 보정값
     [SerializeField]
     private float YOffset= 0.6f;
+
+    public void SetPlayer(GameObject player) { _player = player; }
 
     void Start()
     {
@@ -30,6 +32,11 @@ public class CameraController : MonoBehaviour
         // 장애물이 있으면 카메라 거리를 줄이는 방식(간단한 충돌 회피)
         if (_mode == Define.CameraMode.QuaterView)
         {
+            if(_player.IsValid() == false)
+            {
+                return;
+            }
+
             // 플레이어 → 카메라 방향에 Wall이 있으면 카메라를 당겨서 클리핑 방지
             RaycastHit hit;
             if (Physics.Raycast(_player.transform.position, _delta, out hit, _delta.magnitude, LayerMask.GetMask("Wall")))
