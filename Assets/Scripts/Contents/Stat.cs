@@ -55,4 +55,26 @@ public class Stat : MonoBehaviour
     }
     public float Hp01 => (_maxHp <= 0) ? 0f : Mathf.Clamp01((float)_hp / _maxHp);
 
+    public virtual void OnAttacked(Stat attacker)
+    {
+        // 방어력을 고려한 최종 데미지 계산(0 미만 방지)
+        int damage = Mathf.Max(0, attacker.Attack - Defense);
+        Hp -= damage;
+        if (Hp <= 0)
+        {
+            Hp = 0;
+            OnDead(attacker);
+        }
+
+    }
+    protected  virtual void OnDead(Stat attacker)
+    {
+        PlayerStats playerStat = attacker as PlayerStats;
+        if (playerStat != null)
+        {
+            playerStat.Exp += 5;
+        }
+
+        Managers.Game.Despawn(gameObject);
+    }
 }

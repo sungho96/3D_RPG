@@ -190,13 +190,7 @@ public class PlayerController : BaseController
         {
             // 락온 타겟의 스탯 가져오기
             Stat targetStat = _lockTarget.GetComponent<Stat>();
-
-            // 내 스탯 가져오기(이미 _stat 캐싱되어 있음)
-            PlayerStats myStat = gameObject.GetComponent<PlayerStats>();
-
-            // 방어력을 고려한 데미지 계산(0 미만 방지)
-            int damage = Mathf.Max(0, myStat.Attack - targetStat.Defense);
-            targetStat.Hp -= damage;
+            targetStat.OnAttacked(_stat);
         }
 
         // 다음 루프를 위해 리셋(다음 프레임에 Attack1 재시작 가능)

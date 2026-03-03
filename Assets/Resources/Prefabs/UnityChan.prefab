@@ -3306,6 +3306,7 @@ GameObject:
   - component: {fileID: 4817369447564126812}
   - component: {fileID: 2815747333648996099}
   - component: {fileID: 566650852996924111}
+  - component: {fileID: -7514518115287764967}
   m_Layer: 0
   m_Name: UnityChan
   m_TagString: Player
@@ -3477,7 +3478,7 @@ MonoBehaviour:
   _level: 1
   _hp: 100
   _maxHp: 100
-  _attack: 500
+  _attack: 25
   _defense: 5
   _moveSpeed: 5
   _playerName: Kata(name)
@@ -3490,6 +3491,19 @@ MonoBehaviour:
   _skill2: 30
   _skill3: 20
   _skill4: 10
+--- !u!114 &-7514518115287764967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434802903866973546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6a6b635a71952e4b8b4565854544bf6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  IsUsing: 0
 --- !u!1 &4470685658140282310
 GameObject:
   m_ObjectHideFlags: 0

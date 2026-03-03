@@ -14,9 +14,14 @@ namespace Data
     public class Stat
     {
         public int level;   // 레벨(딕셔너리 Key로 사용)
-        public int hp;      // 체력
+        public int maxHp;      // 체력
         public int mp;      // 마나
         public int attack;  // 공격력
+        public int totalExp; //경험치
+        public int skill1; //스킬1~4
+        public int skill2;
+        public int skill3;
+        public int skill4;
     }
 
     /// <summary>

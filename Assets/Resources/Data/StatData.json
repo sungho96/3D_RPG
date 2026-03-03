@@ -2,21 +2,36 @@
   "stats": [
     {
       "level": "1",
-      "hp": "100",
-      "Mp": "50",
-      "attack": "10"
+      "maxHp": "200",
+      "Mp": "100",
+      "attack": "25",
+      "totalExp" : "0",
+      "skill1" : "40",
+      "skill2" : "30",
+      "skill3" : "20",
+      "skill4" : "10"
     },
     {
       "level": "2",
-      "hp": "150",
-      "Mp": "75",
-      "attack": "15"
+      "maxHp": "250",
+      "Mp": "125",
+      "attack": "35",
+      "totalExp" : "10",
+      "skill1" : "50",
+      "skill2" : "40",
+      "skill3" : "30",
+      "skill4" : "20"
     },
     {
       "level": "3",
-      "hp": "200",
-      "Mp": "100",
-      "attack": "20"
+      "maxHp": "300",
+      "Mp": "150",
+      "attack": "40",
+      "totalExp" : "15",
+      "skill1" : "60",
+      "skill2" : "50",
+      "skill3" : "40",
+      "skill4" : "30"
     }
   ]
 } 

@@ -26,7 +26,10 @@ public class GameScene : BaseScene
         GameObject player = Managers.Game.Spawn(Define.WorldObject.Player, "UnityChan");
         Camera.main.gameObject.GetOrAddComponent<CameraController>().SetPlayer(player);
 
-        Managers.Game.Spawn(Define.WorldObject.Monster, "Knight");
+        GameObject go = new GameObject { name = "SpawningPool" };
+        SpawningPool pool = go.GetOrAddComponent<SpawningPool>();
+        pool.SetKeepMonsterCount(3);
+        
     }
 
 

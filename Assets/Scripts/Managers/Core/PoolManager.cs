@@ -100,24 +100,10 @@ public class PoolManager
             // 활성화(보이기/업데이트 대상 복귀)
             poolable.gameObject.SetActive(true);
 
-            /*
-             * 부모 처리
-             * 의도: parent가 없으면 "현재 씬 루트" 밑에 두고 싶음
-             * 주의: 아래 코드 흐름상 마지막에 parent를 다시 대입하는 줄이 있어
-             */
-            if (parent == null)
-                poolable.transform.parent = Managers.Scene.CurrentScene.transform;
+            Transform targetParent = parent ?? Managers.Scene.CurrentScene.transform;
+            poolable.transform.SetParent(targetParent);
 
-            // 최종 parent 지정
-            poolable.transform.parent = parent;
-
-            /*
-             * IsUsing 플래그
-             * 일반적으로 Pop된 순간은 "사용 중"이므로 true가 자연스럽지만,
-             * 지금 코드는 false로 되어 있음
-             * 당장 동작엔 문제 없을 수 있지만, 나중에 상태 체크 로직 붙일 때 혼동 포인트
-             */
-            poolable.IsUsing = false;
+            poolable.IsUsing = true;
 
             return poolable;
         }
@@ -149,6 +135,12 @@ public class PoolManager
     /// </summary>
     public void CreatePool(GameObject original, int count = 5)
     {
+        if (_root == null)
+            Init();
+
+        if (_pool.ContainsKey(original.name))
+            return;
+
         Pool pool = new Pool();
         pool.Init(original, count);
 
@@ -164,6 +156,12 @@ public class PoolManager
     /// </summary>
     public void push(Poolable poolable) // 반환
     {
+        if (poolable == null)
+            return;
+
+        if (poolable.IsUsing == false)
+            return;
+
         // key로 name 사용(위에서 Create할 때 name을 원본과 동일하게 맞춘 이유)
         string name = poolable.gameObject.name;
 

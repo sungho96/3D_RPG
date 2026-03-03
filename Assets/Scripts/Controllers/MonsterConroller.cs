@@ -38,7 +38,7 @@ public class MonsterConroller : BaseController
     protected override void UpdateIdle()
     {
         // 태그 기반으로 플레이어 탐색
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        GameObject player = Managers.Game.GetPlayer();
 
         if (player == null)
             return;
@@ -128,10 +128,7 @@ public class MonsterConroller : BaseController
         {
             // 타겟 스탯 / 내 스탯 참조
             Stat targetStat = _lockTarget.GetComponent<Stat>();
-
-            // 방어력을 고려한 최종 데미지 계산(0 미만 방지)
-            int damage = Mathf.Max(0, _stat.Attack - targetStat.Defense);
-            targetStat.Hp -= damage;
+            targetStat.OnAttacked(_stat);
 
             if(targetStat.Hp <=0)
             {
