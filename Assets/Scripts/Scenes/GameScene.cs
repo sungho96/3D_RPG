@@ -28,6 +28,8 @@ public class GameScene : BaseScene
 
         GameObject go = new GameObject { name = "SpawningPool" };
         SpawningPool pool = go.GetOrAddComponent<SpawningPool>();
+
+        pool.SetSpawnCenter(new Vector3(-36f, -1.6f, -26.11f), 15f);
         pool.SetKeepMonsterCount(3);
         
     }

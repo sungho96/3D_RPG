@@ -12,6 +12,8 @@ public class MonsterConroller : BaseController
 
     NavMeshAgent _nma; // NavMesh 이동 처리용
 
+
+
     /// <summary>
     /// 몬스터 초기화.
     /// - Stat / NavMeshAgent 캐싱
@@ -130,11 +132,6 @@ public class MonsterConroller : BaseController
             Stat targetStat = _lockTarget.GetComponent<Stat>();
             targetStat.OnAttacked(_stat);
 
-            if(targetStat.Hp <=0)
-            {
-                Managers.Game.Despawn(targetStat.gameObject);
-            }
-
             // 타겟이 살아있으면 거리 기준으로 공격 지속/재추적 판단
             if (targetStat.Hp > 0)
             {
@@ -156,5 +153,27 @@ public class MonsterConroller : BaseController
             // 타겟을 잃어버렸으면 대기 상태 복귀
             State = Define.State.Idle;
         }
+    }
+
+    void OnEnable()
+    {
+        // Init은 재활성화 때도 필요 (Start 대신)
+        Init();
+
+        // 상태 리셋
+        _lockTarget = null;
+        _destPos = transform.position;
+        State = Define.State.Idle;
+
+        // Agent 리셋
+        if (_nma != null)
+        {
+            _nma.ResetPath();
+            _nma.isStopped = false;
+        }
+
+        // HP 리셋 (핵심)
+        if (_stat != null)
+            _stat.ResetHpToMax();
     }
 }

@@ -67,14 +67,20 @@ public class Stat : MonoBehaviour
         }
 
     }
+    public void ResetHpToMax()
+    {
+        Hp = MaxHp; // OnChanged 자동 호출됨
+    }
     protected  virtual void OnDead(Stat attacker)
     {
         PlayerStats playerStat = attacker as PlayerStats;
         if (playerStat != null)
         {
-            playerStat.Exp += 5;
+            playerStat.Exp += 3;
         }
 
         Managers.Game.Despawn(gameObject);
     }
+
+
 }
